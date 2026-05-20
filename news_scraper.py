@@ -59,19 +59,6 @@ def scrape_pts_news():
     # 1. 先讀取已經存下來的舊新聞，避免重複抓取
     existing_news = []
     existing_urls = set()
-
-    if data and data["title"]:
-            # 將新新聞「插隊」放到清單的最前面
-            existing_news.insert(0, {
-                "title": data["title"],
-                "link": data["url"],
-                "date": data["date"],
-                "image_url": data["image_url"],
-                "content_preview": data["text"][:150] + "..." if len(data["text"]) > 150 else data["text"],
-                # 【新增這行】呼叫自動分類函式，將標籤存下來
-                "category": auto_categorize(data["title"], data["text"])
-            })
-            new_articles_count += 1
         
     if os.path.exists("news_data.json"):
         try:
@@ -110,13 +97,15 @@ def scrape_pts_news():
         data = extract_pts_article_data(link)
         
         if data and data["title"]:
-            # 將新新聞「插隊」放到清單的最前面 (index 0)
+            # 將新新聞「插隊」放到清單的最前面
             existing_news.insert(0, {
                 "title": data["title"],
                 "link": data["url"],
                 "date": data["date"],
                 "image_url": data["image_url"],
-                "content_preview": data["text"][:150] + "..." if len(data["text"]) > 150 else data["text"]
+                "content_preview": data["text"][:150] + "..." if len(data["text"]) > 150 else data["text"],
+                # 【新增這行】呼叫自動分類函式，將標籤存下來
+                "category": auto_categorize(data["title"], data["text"])
             })
             new_articles_count += 1
             
