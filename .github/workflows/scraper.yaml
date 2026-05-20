@@ -1,27 +1,32 @@
 name: Auto News Scraper
-    on:
-      schedule:
-        - cron: '0 * * * *'
-      workflow_dispatch:
-    permissions:
-      contents: write
-    jobs:
-      scrape:
-        runs-on: ubuntu-latest
-        steps:
-          - uses: actions/checkout@v3
-          - uses: actions/setup-python@v4
-            with:
-              python-version: '3.10'
-          - run: pip install requests beautifulsoup4 newspaper3k lxml_html_clean
-          - run: python news_scraper.py
-          - run: |
-              git config --global user.name 'github-actions[bot]'
-              git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-              git add news_data.json
-              git commit -m "🤖 自動更新新聞資料庫" || exit 0
-              git push
-    ```
-  
-  
-    點擊右上角的綠色按鈕 **Commit changes...**。
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          
+      - name: Install Requirements
+        run: pip install requests beautifulsoup4 newspaper3k lxml_html_clean
+        
+      - name: Run Scraper
+        run: python news_scraper.py
+        
+      - name: Commit and Push
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add news_data.json
+          git commit -m "🤖 自動更新新聞資料庫" || exit 0
+          git push
