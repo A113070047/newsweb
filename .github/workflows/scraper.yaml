@@ -10,12 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4  # 更新到 v4，消除黃色警告
         
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # 更新到 v5，消除黃色警告
         with:
           python-version: "3.10"
+          
+      - name: 檢查檔案列表 (除錯用)
+        run: ls -la
           
       - name: Install Requirements
         run: pip install requests beautifulsoup4 newspaper3k lxml_html_clean
