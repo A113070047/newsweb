@@ -67,8 +67,8 @@
                     ? `<img src="${item.image_url}" class="card-img-top" alt="新聞縮圖">`
                     : `<div class="card-img-top d-flex align-items-center justify-content-center text-muted"><span>📷 暫無新聞縮圖</span></div>`;
                 
-                // 【修改】：將寫死的「焦點新聞」改成動態讀取 item.category，如果沒抓到就顯示「綜合」
-                const categoryBadge = item.category ? item.category : '綜合';
+                // 【修改】：將寫死的「焦點新聞」改成動態讀取 item.category，如果沒抓到就顯示「其他」
+                const categoryBadge = item.category ? item.category : '其他';
                     
                 const card = `
                     <div class="col">
@@ -93,7 +93,7 @@
         // 產生分類按鈕的函式
         function renderCategoryButtons() {
             // 從所有新聞中，把出現過的分類統整出來，並加上「全部」
-            const categories = ['全部', '政治', '科技', '氣象', '財經', '體育', '綜合'];
+            const categories = ['全部', '政治', '科技', '氣象', '財經', '體育', '其他'];
             const btnContainer = document.getElementById('category-buttons');
             
             categories.forEach(cat => {
@@ -123,7 +123,7 @@
             
             const filteredNews = allNewsData.filter(item => {
                 // 1. 檢查分類是否符合 (如果選'全部'就一律通過)
-                const itemCat = item.category || '綜合';
+                const itemCat = item.category || '其他';
                 const matchCategory = (currentCategory === '全部') || (itemCat === currentCategory);
                 
                 // 2. 檢查關鍵字是否符合
