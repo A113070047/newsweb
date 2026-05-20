@@ -1,35 +1,27 @@
-on:
-  schedule:
-    - cron: '0 * * * *' # 每小時執行一次 (UTC 時間)
-  workflow_dispatch: # 允許在 GitHub 網頁上手動點擊執行
-
-permissions:
-  contents: write # 賦予機器人寫入程式碼的權限
-
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 抓取最新程式碼
-        uses: actions/checkout@v3
-        
-      - name: 設定 Python 環境
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-          
-      - name: 安裝套件
-        run: |
-          pip install requests beautifulsoup4 newspaper3k lxml_html_clean
-          
-      - name: 執行爬蟲程式
-        run: python news_scraper.py
-        
-      - name: 將更新的 JSON 檔推送到 GitHub
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add news_data.json
-          # 如果沒有新資料，commit 會失敗，我們用 || exit 0 讓它安全略過
-          git commit -m "🤖 自動更新新聞資料庫" || exit 0
-          git push
+name: Auto News Scraper
+    on:
+      schedule:
+        - cron: '0 * * * *'
+      workflow_dispatch:
+    permissions:
+      contents: write
+    jobs:
+      scrape:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: actions/checkout@v3
+          - uses: actions/setup-python@v4
+            with:
+              python-version: '3.10'
+          - run: pip install requests beautifulsoup4 newspaper3k lxml_html_clean
+          - run: python news_scraper.py
+          - run: |
+              git config --global user.name 'github-actions[bot]'
+              git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+              git add news_data.json
+              git commit -m "🤖 自動更新新聞資料庫" || exit 0
+              git push
+    ```
+  
+  
+    點擊右上角的綠色按鈕 **Commit changes...**。
