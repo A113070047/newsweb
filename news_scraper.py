@@ -11,23 +11,39 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def auto_categorize(title, text):
     """
-    透過檢查標題和內文的關鍵字，自動幫新聞分類
+    進階版：利用「計分機制」讓分類更精準，並將預設改為「其他」
     """
-    combined_text = title + text
+    # 定義更豐富的關鍵字字典
+    categories = {
+        "政治": ["選舉", "立法院", "法案", "總統", "政治", "執政", "政黨", "官員", "外交", "內政"],
+        "科技": ["AI", "蘋果", "台積電", "半導體", "科技", "晶片", "人工智慧", "微軟", "電動車", "伺服器"],
+        "氣象": ["颱風", "地震", "降雨", "氣溫", "天氣", "大雨", "特報", "氣象署", "寒流"],
+        "財經": ["股市", "經濟", "通膨", "央行", "台股", "升息", "投資", "美股", "GDP", "匯率"],
+        "體育": ["棒球", "奧運", "籃球", "賽事", "體育", "羽球", "網球", "大聯盟", "中職", "冠軍"]
+    }
+
+    scores = {cat: 0 for cat in categories}
     
-    # 建立分類規則字典 (你可以自由新增或修改關鍵字)
-    if any(keyword in combined_text for keyword in ["棒球", "奧運", "籃球", "賽事", "體育"]):
-        return "體育"
-    elif any(keyword in combined_text for keyword in ["AI", "蘋果", "台積電", "半導體", "科技", "晶片"]):
-        return "科技"
-    elif any(keyword in combined_text for keyword in ["選舉", "立法院", "法案", "總統", "政治", "執政"]):
-        return "政治"
-    elif any(keyword in combined_text for keyword in ["颱風", "地震", "降雨", "氣溫", "天氣"]):
-        return "氣象"
-    elif any(keyword in combined_text for keyword in ["股市", "經濟", "通膨", "央行", "台股"]):
-        return "財經"
-    else:
-        return "綜合" # 如果都沒中，就歸類為綜合
+    # 1. 檢查標題：如果關鍵字在標題出現，權重極高 (加 3 分)
+    for cat, keywords in categories.items():
+        for keyword in keywords:
+            if keyword in title:
+                scores[cat] += 3
+    
+    # 2. 檢查內文：計算關鍵字在內文出現的總次數 (每次加 1 分)
+    for cat, keywords in categories.items():
+        for keyword in keywords:
+            scores[cat] += text.count(keyword)
+            
+    # 3. 找出最高分的分類
+    best_category = max(scores, key=scores.get)
+    
+    # 4. 如果最高分還是 0 (代表完全沒中)，就歸類為「其他」
+    if scores[best_category] == 0:
+        return "其他"
+        
+    return best_category
+
 
 def extract_pts_article_data(url):
     try:
