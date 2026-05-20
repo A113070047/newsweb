@@ -69,7 +69,7 @@ def scrape_pts_news():
     print(f"首頁掃描到 {len(article_links)} 篇新聞，準備過濾...")
     new_articles_count = 0
     
-    for link in article_links[:30]:
+    for link in article_links[:100]:
         # 【核心邏輯】如果這篇新聞的網址已經在舊資料庫裡，就直接跳過！
         if link in existing_urls:
             continue
