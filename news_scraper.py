@@ -5,7 +5,6 @@ import time
 import os
 from newspaper import Article
 import urllib3
-import schedule # 【新增】排程套件
 from datetime import datetime # 【新增】用來顯示現在時間
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
