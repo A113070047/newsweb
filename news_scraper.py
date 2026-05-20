@@ -9,6 +9,26 @@ from datetime import datetime # 【新增】用來顯示現在時間
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+def auto_categorize(title, text):
+    """
+    透過檢查標題和內文的關鍵字，自動幫新聞分類
+    """
+    combined_text = title + text
+    
+    # 建立分類規則字典 (你可以自由新增或修改關鍵字)
+    if any(keyword in combined_text for keyword in ["棒球", "奧運", "籃球", "賽事", "體育"]):
+        return "體育"
+    elif any(keyword in combined_text for keyword in ["AI", "蘋果", "台積電", "半導體", "科技", "晶片"]):
+        return "科技"
+    elif any(keyword in combined_text for keyword in ["選舉", "立法院", "法案", "總統", "政治", "執政"]):
+        return "政治"
+    elif any(keyword in combined_text for keyword in ["颱風", "地震", "降雨", "氣溫", "天氣"]):
+        return "氣象"
+    elif any(keyword in combined_text for keyword in ["股市", "經濟", "通膨", "央行", "台股"]):
+        return "財經"
+    else:
+        return "綜合" # 如果都沒中，就歸類為綜合
+
 def extract_pts_article_data(url):
     try:
         headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
@@ -39,7 +59,20 @@ def scrape_pts_news():
     # 1. 先讀取已經存下來的舊新聞，避免重複抓取
     existing_news = []
     existing_urls = set()
-    
+
+    if data and data["title"]:
+            # 將新新聞「插隊」放到清單的最前面
+            existing_news.insert(0, {
+                "title": data["title"],
+                "link": data["url"],
+                "date": data["date"],
+                "image_url": data["image_url"],
+                "content_preview": data["text"][:150] + "..." if len(data["text"]) > 150 else data["text"],
+                # 【新增這行】呼叫自動分類函式，將標籤存下來
+                "category": auto_categorize(data["title"], data["text"])
+            })
+            new_articles_count += 1
+        
     if os.path.exists("news_data.json"):
         try:
             with open("news_data.json", "r", encoding="utf-8") as file:
