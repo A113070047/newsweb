@@ -21,7 +21,7 @@ jobs:
         run: ls -la
           
       - name: Install Requirements
-        run: pip install requests beautifulsoup4 newspaper3k lxml_html_clean psycopg2-binaryv
+        run: pip install requests beautifulsoup4 newspaper3k lxml_html_clean psycopg2-binary
         
       - name: Run Scraper
         env:
