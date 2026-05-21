@@ -137,23 +137,23 @@ def scrape_pts_news():
         print("=== 檢查完畢，目前沒有新的新聞 ===")
 
 if __name__ == "__main__":
-    # 程式一啟動，先強制手動執行一次
+    # 1. 照常執行爬蟲，這會更新 existing_news 變數並寫入 JSON 檔
     scrape_pts_news()
-
-    print("\n⏳ 自動排程已啟動！")
-    print("請不要關閉這個終端機視窗。程式會在背景每 60 分鐘自動幫你巡邏並抓取新新聞...")
-
     
-# 從環境變數安全地讀取密碼
+    # 2. 開始將資料同步至 Aiven PostgreSQL
     db_url = os.environ.get("DATABASE_URL")
     
     if db_url:
+        # Aiven 預設開頭可能是 postgres://，將其修正為 psycopg2 認得的 postgresql://
+        if db_url.startswith("postgres://"):
+            db_url = db_url.replace("postgres://", "postgresql://", 1)
+            
         try:
-            # 連線到雲端 PostgreSQL
+            # 連線到雲端資料庫
             conn = psycopg2.connect(db_url)
             cursor = conn.cursor()
 
-            # 建立資料表 (如果還沒有建過的話)
+            # 自動建立資料表（如果還沒有的話）
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS pts_news (
                     id SERIAL PRIMARY KEY,
@@ -166,20 +166,33 @@ if __name__ == "__main__":
                 )
             """)
 
-            # 將剛抓到的新聞寫入資料庫
-            for news in existing_news:
-                # 這裡使用了 ON CONFLICT，遇到重複的標題就會自動跳過，非常聰明！
+            # 讀取剛剛爬完、已經更新完畢的 JSON 檔案內容（確保跟網頁資料同步）
+            with open("news_data.json", "r", encoding="utf-8") as f:
+                import json
+                news_to_sync = json.load(f)
+
+            # 將新聞一筆一筆寫入資料庫，若標題重複（ON CONFLICT）就自動跳過
+            for news in news_to_sync:
                 cursor.execute("""
                     INSERT INTO pts_news (title, link, date, image_url, content_preview, category)
                     VALUES (%s, %s, %s, %s, %s, %s)
                     ON CONFLICT (title) DO NOTHING
-                """, (news["title"], news["link"], news["date"], news["image_url"], news["content_preview"], news["category"]))
+                """, (
+                    news.get("title"), 
+                    news.get("link"), 
+                    news.get("date"), 
+                    news.get("image_url"), 
+                    news.get("content_preview"), 
+                    news.get("category", "其他")
+                ))
 
-            # 確認存檔並關閉連線
+            # 提交變更並關閉連線
             conn.commit()
             cursor.close()
             conn.close()
-            print("成功將新聞同步至 PostgreSQL！")
+            print("🎉 成功將新聞同步至 Aiven PostgreSQL 資料庫！")
 
         except Exception as e:
-            print(f"資料庫寫入失敗: {e}")
+            print(f"❌ 資料庫同步失敗，錯誤訊息: {e}")
+    else:
+        print("⚠️ 未偵測到 DATABASE_URL 環境變數，跳過資料庫同步。")
