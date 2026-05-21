@@ -140,8 +140,46 @@ if __name__ == "__main__":
     # 程式一啟動，先強制手動執行一次
     scrape_pts_news()
 
-    
     print("\n⏳ 自動排程已啟動！")
     print("請不要關閉這個終端機視窗。程式會在背景每 60 分鐘自動幫你巡邏並抓取新新聞...")
-    
 
+    
+# 從環境變數安全地讀取密碼
+    db_url = os.environ.get("DATABASE_URL")
+    
+    if db_url:
+        try:
+            # 連線到雲端 PostgreSQL
+            conn = psycopg2.connect(db_url)
+            cursor = conn.cursor()
+
+            # 建立資料表 (如果還沒有建過的話)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS pts_news (
+                    id SERIAL PRIMARY KEY,
+                    title TEXT UNIQUE,
+                    link TEXT,
+                    date TEXT,
+                    image_url TEXT,
+                    content_preview TEXT,
+                    category TEXT
+                )
+            """)
+
+            # 將剛抓到的新聞寫入資料庫
+            for news in existing_news:
+                # 這裡使用了 ON CONFLICT，遇到重複的標題就會自動跳過，非常聰明！
+                cursor.execute("""
+                    INSERT INTO pts_news (title, link, date, image_url, content_preview, category)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (title) DO NOTHING
+                """, (news["title"], news["link"], news["date"], news["image_url"], news["content_preview"], news["category"]))
+
+            # 確認存檔並關閉連線
+            conn.commit()
+            cursor.close()
+            conn.close()
+            print("成功將新聞同步至 PostgreSQL！")
+
+        except Exception as e:
+            print(f"資料庫寫入失敗: {e}")
